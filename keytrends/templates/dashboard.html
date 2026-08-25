@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KeyTrends — input analytics</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect x='4' y='14' width='56' height='36' rx='8' fill='%232a78d6'/><rect x='18' y='39' width='28' height='6' rx='1' fill='%23fff'/><rect x='12' y='22' width='8' height='6' rx='1' fill='%23fff'/><rect x='24' y='22' width='8' height='6' rx='1' fill='%23fff'/><rect x='36' y='22' width='8' height='6' rx='1' fill='%23fff'/></svg>">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topbar">
+    <div class="brand">
+      <h1>KeyTrends</h1>
+      <span class="tag">v{{ version }} · local only</span>
+    </div>
+    <div class="livepill" id="livepill">
+      <span class="dot rec" id="liveDot"></span><span id="liveText">connecting…</span>
+    </div>
+    <button class="btn" id="pauseBtn">Pause</button>
+    <button class="btn" id="themeBtn" title="Switch theme">Theme</button>
+    <button class="btn" id="settingsBtn">Settings</button>
+  </header>
+
+  <!-- One filter row, scoping every panel below it. -->
+  <div class="filters">
+    <div class="segmented" id="ranges" role="group" aria-label="Date range">
+      <button data-range="today">Today</button>
+      <button data-range="7d">7 days</button>
+      <button data-range="30d" aria-pressed="true">30 days</button>
+      <button data-range="90d">90 days</button>
+      <button data-range="365d">Year</button>
+      <button data-range="all">All time</button>
+    </div>
+    <span class="range-note" id="rangeNote"></span>
+    <span class="spacer"></span>
+    <button class="btn" data-export="csv">Export CSV</button>
+    <button class="btn" data-export="json">Export JSON</button>
+  </div>
+
+  <section class="tiles" id="tiles"></section>
+
+  <section id="insightsWrap">
+    <div class="insights" id="insights"></div>
+  </section>
+
+  <div class="grid two">
+    <div class="card">
+      <div class="card-head">
+        <h2>Activity over time</h2>
+        <div class="actions">
+          <button class="linkish" data-toggle="trend" aria-pressed="false">Table</button>
+        </div>
+      </div>
+      <p class="hint">Keystrokes and clicks per day across the selected range.</p>
+      <ul class="legend" id="trendLegend"></ul>
+      <div class="chart-area" id="trendChart"></div>
+      <div class="tableview hidden" id="trendTable"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Time of day</h2>
+        <div class="actions">
+          <button class="linkish" data-toggle="hour" aria-pressed="false">Table</button>
+        </div>
+      </div>
+      <p class="hint">Which hours you actually work in, summed over the range.</p>
+      <div class="chart-area" id="hourChart"></div>
+      <div class="tableview hidden" id="hourTable"></div>
+    </div>
+  </div>
+
+  <div class="grid two">
+    <div class="card">
+      <div class="card-head">
+        <h2>Weekly rhythm</h2>
+        <div class="actions">
+          <button class="linkish" data-toggle="matrix" aria-pressed="false">Table</button>
+        </div>
+      </div>
+      <p class="hint">Total input by weekday and hour — your working pattern at a glance.</p>
+      <div class="chart-area" id="matrixChart"></div>
+      <div class="scale" id="matrixScale"></div>
+      <div class="tableview hidden" id="matrixTable"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Mouse</h2></div>
+      <p class="hint">Button split, scrolling, and how far the cursor travelled.</p>
+      <div class="barlist" id="mouseBars"></div>
+      <div style="margin-top:18px"><dl class="kv" id="mouseKv"></dl></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Keyboard heatmap</h2>
+      <div class="actions">
+        <button class="linkish" data-toggle="kbd" aria-pressed="false">Table</button>
+      </div>
+    </div>
+    <p class="hint">How often each key was pressed. Shifted symbols count toward their base key.</p>
+    <div class="chart-area"><div class="kbd" id="kbd"></div></div>
+    <div class="scale" id="kbdScale"></div>
+    <div class="tableview hidden" id="kbdTable"></div>
+  </div>
+
+  <div class="grid three">
+    <div class="card">
+      <div class="card-head"><h2>Most used keys</h2></div>
+      <p class="hint">Top 12 by press count.</p>
+      <div class="barlist" id="keyBars"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Top applications</h2></div>
+      <p class="hint">Where your keystrokes and clicks went.</p>
+      <div class="barlist" id="appBars"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Top shortcuts</h2></div>
+      <p class="hint">Modifier combinations you reach for most.</p>
+      <div class="barlist" id="shortcutBars"></div>
+    </div>
+  </div>
+
+  <div class="grid two">
+    <div class="card">
+      <div class="card-head"><h2>Records &amp; streaks</h2></div>
+      <p class="hint">All-time, regardless of the selected range.</p>
+      <dl class="kv" id="recordsKv"></dl>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Milestones</h2></div>
+      <p class="hint">Lifetime totals you have crossed.</p>
+      <div class="chips" id="milestones"></div>
+    </div>
+  </div>
+
+  <p class="privacy">
+    <strong>What this records.</strong> KeyTrends stores counts only — how many times
+    each key was pressed on a given day, click and scroll totals, cursor travel, and
+    which application had focus. It never stores the order you pressed keys in, so the
+    data cannot reconstruct anything you typed. Everything stays in a local SQLite file
+    on this PC; nothing is uploaded anywhere.
+  </p>
+</div>
+
+<dialog id="settings">
+  <div class="dlg-head">
+    <h2>Settings</h2>
+    <button class="btn" id="closeSettings">Close</button>
+  </div>
+  <div class="dlg-body">
+    <div class="setting">
+      <input type="checkbox" id="setPaused">
+      <label class="txt" for="setPaused">
+        <strong>Pause tracking</strong>
+        <span>Stop recording input until resumed. Existing data is kept.</span>
+      </label>
+    </div>
+    <div class="setting">
+      <input type="checkbox" id="setAutostart">
+      <label class="txt" for="setAutostart">
+        <strong>Start with Windows</strong>
+        <span>Launch KeyTrends into the tray when you sign in.</span>
+      </label>
+    </div>
+
+    <p class="section-label">Tracking detail</p>
+    <div class="setting">
+      <input type="checkbox" id="setKeyDetail">
+      <label class="txt" for="setKeyDetail">
+        <strong>Per-key frequency</strong>
+        <span>Needed for the keyboard heatmap and most-used keys. Turn off to keep totals only.</span>
+      </label>
+    </div>
+    <div class="setting">
+      <input type="checkbox" id="setApps">
+      <label class="txt" for="setApps">
+        <strong>Application attribution</strong>
+        <span>Record which app had focus for each keystroke and click.</span>
+      </label>
+    </div>
+    <div class="setting">
+      <input type="checkbox" id="setShortcuts">
+      <label class="txt" for="setShortcuts">
+        <strong>Shortcut combinations</strong>
+        <span>Record which modifier combos you use, such as Ctrl+C.</span>
+      </label>
+    </div>
+
+    <p class="section-label">Privacy</p>
+    <div class="setting">
+      <div class="txt">
+        <strong>Excluded applications</strong>
+        <span>Input is ignored entirely while these apps have focus. Comma separated, e.g. <code>keepass, mstsc</code>.</span>
+        <input type="text" id="setExcluded" placeholder="keepass, 1password, mstsc">
+      </div>
+    </div>
+
+    <p class="section-label">Other</p>
+    <div class="setting">
+      <input type="checkbox" id="setOpenOnStart">
+      <label class="txt" for="setOpenOnStart">
+        <strong>Open dashboard on launch</strong>
+        <span>Open this page automatically when KeyTrends starts.</span>
+      </label>
+    </div>
+    <div class="setting">
+      <input type="checkbox" id="setMilestoneNotify">
+      <label class="txt" for="setMilestoneNotify">
+        <strong>Milestone notifications</strong>
+        <span>Show a tray notification when you cross a lifetime total.</span>
+      </label>
+    </div>
+    <div class="setting">
+      <div class="txt">
+        <strong>Delete all data</strong>
+        <span>Permanently erases every recorded statistic. This cannot be undone.</span>
+        <p style="margin:10px 0 0"><button class="btn danger" id="resetBtn">Delete all data…</button></p>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

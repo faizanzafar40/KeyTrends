@@ -1,0 +1,10 @@
+# Normalise to LF in the repository, check out native on each platform.
+* text=auto
+
+# Windows batch files must keep CRLF or cmd.exe can mis-parse them.
+*.bat text eol=crlf
+
+# Never touch binaries.
+*.jpg binary
+*.png binary
+*.db binary

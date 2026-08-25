@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "keytrends"
+version = "1.0.0"
+description = "Local keyboard and mouse analytics for Windows — counts and trends, never the text you type."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Faizan Zafar", email = "faizanzafar40@gmail.com" }]
+keywords = ["keyboard", "mouse", "analytics", "quantified-self", "statistics", "windows", "tray"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Win32 (MS Windows)",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "pynput>=1.7.6",
+    "pystray>=0.19.4",
+    "Pillow>=10.0.0",
+    "Flask>=3.0.0",
+    "psutil>=5.9.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/faizanzafar40/KeyTrends"
+Issues = "https://github.com/faizanzafar40/KeyTrends/issues"
+
+[project.scripts]
+keytrends = "keytrends.__main__:main"
+
+[tool.setuptools]
+packages = ["keytrends"]
+
+[tool.setuptools.package-data]
+keytrends = ["templates/*.html", "static/css/*.css", "static/js/*.js"]
